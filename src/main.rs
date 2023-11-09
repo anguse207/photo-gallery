@@ -10,7 +10,7 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, post},
-    BoxError, Json, Router, Server,
+    BoxError, Json, Router,
 };
 
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
