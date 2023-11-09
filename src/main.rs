@@ -1,18 +1,14 @@
-use std::{
-    path::Path,
-    sync::Arc,
-    fs,
-};
+use std::{fs, path::Path, sync::Arc};
 
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use axum::{
     debug_handler,
-    extract::{State,Path as ePath},
+    extract::{Path as ePath, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post, delete},
+    routing::{delete, get, post},
     Json, Router, Server,
 };
 
@@ -42,13 +38,10 @@ async fn main() {
     let router = Router::new()
         // Statically serve frontend
         .nest_service("/", ServeDir::new("public"))
-
         // get route
         .route("/api/get", get(get_vec))
-
         // Upload route
         .route("/api/upload", post(upload))
-
         // delete route
         .route("/api/delete/:image", delete(delete_file))
         .with_state(state);
@@ -74,15 +67,12 @@ async fn upload(
     info!("-> /api/upload");
 
     let name = file.metadata.file_name.expect("Error getting name");
-    let ext = Path::new(&name).extension().unwrap().to_str().unwrap();
+    info!("New upload: {}", &name);
 
-    info!("New upload: {}, of type {:?}", &name, &ext);
-
-    match ext.to_lowercase().as_str() {
-        "jpg" | "jpeg" | "png" | "bmp" | "svg" | "gif" | "raw" => (),
-        _ => panic!("Not an image, Killing thread"),
-    }
-
+    let ext = get_file_ext(&name).await;
+    if !(is_image(&ext).await) {
+        return StatusCode::UNPROCESSABLE_ENTITY;
+    };
 
     let file_name = format!("{}.{}", Uuid::new_v4().to_string(), ext);
 
@@ -100,6 +90,25 @@ async fn upload(
     }
 }
 
+async fn get_file_ext(file_name: &String) -> String {
+    let ext = Path::new(file_name).extension().unwrap().to_str().unwrap();
+
+    return ext.to_lowercase();
+}
+
+async fn is_image(ext: &str) -> bool {
+    match ext {
+        "jpg" | "jpeg" | "png" | "bmp" | "svg" | "gif" | "raw" => {
+            info!("ext: {}", { ext });
+            true
+        }
+        _ => {
+            info!("ext: {}", { ext });
+            false
+        }
+    }
+}
+
 // Update the shared Vec<String>.
 async fn update_vec(state: Arc<AppState>, file: &str) {
     let mut images = state.images.lock().await;
@@ -108,10 +117,10 @@ async fn update_vec(state: Arc<AppState>, file: &str) {
     let len = images.len();
     if len > IMAGE_COUNT {
         let v = images.clone();
-        let (remove_list, new_list) = v.split_at(len-IMAGE_COUNT);
+        let (remove_list, new_list) = v.split_at(len - IMAGE_COUNT);
         *images = new_list.to_vec().clone();
         drop(images);
-        
+
         for file in remove_list {
             del(&file).await;
         }
@@ -120,9 +129,7 @@ async fn update_vec(state: Arc<AppState>, file: &str) {
 
 // get the shared Vec<String>.
 #[debug_handler]
-async fn get_vec(
-    State(state): State<Arc<AppState>>,
-) -> Json<Vec<String>> {
+async fn get_vec(State(state): State<Arc<AppState>>) -> Json<Vec<String>> {
     info!("-> /api/get");
 
     let images = state.images.lock().await.clone();
@@ -133,7 +140,7 @@ async fn get_vec(
 #[debug_handler]
 async fn delete_file(
     State(state): State<Arc<AppState>>,
-    ePath(image): ePath<String>
+    ePath(image): ePath<String>,
 ) -> impl IntoResponse {
     info!("-> /api/delete");
 
