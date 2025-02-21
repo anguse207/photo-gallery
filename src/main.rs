@@ -6,12 +6,17 @@ use uuid::Uuid;
 use axum::{
     debug_handler,
     error_handling::HandleErrorLayer,
-    extract::{Path as ePath, State},
+    extract::{
+        ws::{Message, WebSocket},
+        Path as ePath, State, WebSocketUpgrade,
+    },
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, post},
     BoxError, Json, Router,
 };
+
+// use serde::{de, Deserialize};
 
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
 use tempfile::NamedTempFile;
@@ -20,10 +25,7 @@ use tower_http::services::ServeDir;
 use tracing::info;
 
 use tower::ServiceBuilder;
-use tower_governor::{errors::display_error, governor::GovernorConfigBuilder, GovernorLayer};
-
-// TODO: Add rate limiting based on ip
-// https://github.com/benwis/tower-governor
+use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 
 const IMAGE_COUNT: usize = 5;
 
@@ -54,6 +56,8 @@ async fn main() {
         // Statically serve frontend.
         .nest_service("/", ServeDir::new("public"))
         // Get route, returns the image vec.
+        .route("/ws/connect", get(ws_upgrade_handler))
+        // Get route, returns the image vec.
         .route("/api/get", get(get_vec))
         // Upload route, used for uploading a single image.
         .route("/api/upload", post(upload))
@@ -75,13 +79,36 @@ async fn main() {
                 }),
         );
 
-    let server = axum::Server::bind(&"0.0.0.0:7002".parse().unwrap())
+    let server = axum::Server::bind(&"0.0.0.0:7979".parse().unwrap())
         .serve(router.into_make_service_with_connect_info::<SocketAddr>());
 
     let addr = server.local_addr();
     println!("Listening on {addr}");
 
     server.await.unwrap();
+}
+
+#[axum::debug_handler]
+async fn ws_upgrade_handler(
+    ws: WebSocketUpgrade,
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    ws.on_upgrade(|ws: WebSocket| async { ws_connection(state, ws).await })
+}
+
+async fn ws_connection(app_state: Arc<AppState>, mut ws: WebSocket) {
+    // bring the client up to speed...
+    let current_images = app_state.images.lock().await.clone();
+    let current_images = serde_json::to_string(&current_images).unwrap();
+    ws.send(Message::Text(current_images)).await.unwrap();
+
+    loop {
+        let len = app_state.images.lock().await.len();
+    }
+}
+
+async fn watch_for_changes(app_state: Arc<AppState>, len: usize) {
+    todo!()
 }
 
 #[derive(TryFromMultipart)]
@@ -96,24 +123,26 @@ async fn upload(
     TypedMultipart(ImageUpload { file }): TypedMultipart<ImageUpload>,
 ) -> impl IntoResponse {
     let name = file.metadata.file_name.expect("Error getting name");
-    info!("-> /api/upload: {}", &name);
 
     let ext = get_file_ext(&name).await;
     if !(is_image(&ext).await) {
+        info!("-> /api/upload = Not an image: {}", &name);
         return StatusCode::UNPROCESSABLE_ENTITY;
     };
 
     let file_name = format!("{}.{}", Uuid::new_v4(), ext);
 
-    let path = Path::new("./images").join(&file_name);
+    let path = Path::new("./public/images").join(&file_name);
 
     match file.contents.persist(path) {
         Ok(_) => {
             update_vec(state, &file_name).await;
+            info!("-> /api/upload = Saved: {}", &name);
             StatusCode::CREATED
         }
         Err(e) => {
             info!("{}", e);
+            info!("-> /api/upload = Error saving: {}", &name);
             StatusCode::INTERNAL_SERVER_ERROR
         }
     }
@@ -126,10 +155,7 @@ async fn get_file_ext(file_name: &String) -> String {
 }
 
 async fn is_image(ext: &str) -> bool {
-    match ext {
-        "jpg" | "jpeg" | "png" | "bmp" | "svg" | "gif" | "raw" => true,
-        _ => false,
-    }
+    matches!(ext, "jpg" | "jpeg" | "png" | "bmp" | "svg" | "gif" | "raw")
 }
 
 // Update the shared Vec<String>.
@@ -180,5 +206,5 @@ async fn delete_file(
 }
 
 async fn del(file: &String) {
-    fs::remove_file(format!("./images/{}", file)).unwrap();
+    fs::remove_file(format!("./public/images/{}", file)).unwrap();
 }

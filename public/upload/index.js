@@ -1,5 +1,5 @@
-const uploadUrl = "/api/upload";
-
+const uploadUrl = "http://" + window.location.host + "/api/upload";
+console.log(uploadUrl);
 const form = document.forms.namedItem("fileinfo");
 form.addEventListener(
   "submit",
