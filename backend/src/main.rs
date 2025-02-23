@@ -3,6 +3,8 @@ mod frontend;
 
 use axum::{extract::DefaultBodyLimit, routing::get, Router};
 use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::cors::{Any, CorsLayer};
+use tracing_subscriber::layer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -24,7 +26,11 @@ async fn main() {
         )
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(10 * 1024 * 1024 /* 10mb */))
-        .layer(tower_http::trace::TraceLayer::new_for_http());
+        .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(CorsLayer::new()
+            .allow_origin(Any)
+            .allow_methods(Any)
+            .allow_headers(Any));
 
     // run it with hyper
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
