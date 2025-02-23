@@ -46,3 +46,7 @@ body {
 .read-the-docs {
   color: #888;
 }
+
+#qrcode {
+  bottom: 0px;
+}

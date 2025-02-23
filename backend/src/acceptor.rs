@@ -20,6 +20,9 @@ async fn handle_file(file: Field<'_>) {
         "(`{name}`: `{content_type}`) is {size} bytes",
         size = bytes.len()
     );
+
+    // Save the file to disk
+    std::fs::write(&name, bytes).unwrap();
 }
 
 const SUPPORTED_IMAGE_FORMATS: [&str; 8] = [
