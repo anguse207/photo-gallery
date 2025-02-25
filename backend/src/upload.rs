@@ -29,7 +29,7 @@ async fn handle_file(file: Field<'_>, state: AppState) {
     state.add_image(&name);
 
     if !state.is_started() {
-        state.start();
+        state.start().await;
     }
 }
 

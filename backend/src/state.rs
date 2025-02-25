@@ -6,7 +6,7 @@ use std::{
 };
 use tokio::sync::broadcast;
 
-use crate::{acceptor::PATH_PREFIX, runtime};
+use crate::{runtime, upload::PATH_PREFIX};
 
 type Image = Vec<u8>;
 type ImagePath = String;
@@ -16,25 +16,22 @@ pub struct AppState {
     started: Arc<AtomicBool>,
     images: Arc<Mutex<VecDeque<ImagePath>>>,
     pub tx: broadcast::Sender<Image>,
-    pub rx: Arc<broadcast::Receiver<Image>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
-        let (tx, rx) = broadcast::channel(16);
+        let (tx, _) = broadcast::channel(32);
 
         Self {
             started: Arc::new(AtomicBool::new(false)),
             images: Arc::new(Mutex::new(VecDeque::new())),
             tx,
-            rx: Arc::new(rx),
         }
     }
 
     pub async fn start(&self) {
         self.started
             .store(true, std::sync::atomic::Ordering::Relaxed);
-        self.try_next_image();
         runtime::start(self.clone()).await;
     }
 

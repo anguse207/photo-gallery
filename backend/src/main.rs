@@ -1,8 +1,9 @@
-mod acceptor;
+mod client_ws;
 mod frontend;
 mod runtime;
 mod server;
 mod state;
+mod upload;
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
