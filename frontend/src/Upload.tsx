@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 import Button from '@mui/material/Button';
 
-const upload_url = "http://127.0.0.1:3000/upload";
+import { url_upload } from './consts';
+
 
 const Upload: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -12,21 +13,22 @@ const Upload: React.FC = () => {
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(upload_url);
-
     if (!event.target.files || event.target.files.length === 0) return;
 
     const files = Array.from(event.target.files);
 
     for (const file of files) {
       const formData = new FormData();
-      formData.append("files", file); // Adjust field name as per your API
+      formData.append("user-image_upload", file);
 
       try {
-        const response = await fetch(upload_url, {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          url_upload, 
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         // console.log(response);
         if (!response.ok) throw new Error("Upload failed");
@@ -35,7 +37,7 @@ const Upload: React.FC = () => {
       }
     }
 
-    event.target.value = ""; // Reset input to allow re-selection
+    event.target.value = "";
   };
 
   return (
