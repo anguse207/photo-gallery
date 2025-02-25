@@ -8,7 +8,5 @@ pub async fn start(state: AppState) {
             state.try_next_image();
             tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
         }
-    })
-    .await
-    .unwrap();
+    });
 }
