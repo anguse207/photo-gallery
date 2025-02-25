@@ -17,7 +17,7 @@ pub async fn serve(state: AppState) {
             "/api/upload",
             get(frontend::upload_form).post(upload::handle_files),
         )
-        .route("/api/client-ws", any(client_ws_handler))
+        .route("/api/ws", any(client_ws_handler))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(10 * 1024 * 1024 /* 10mb */))
         .layer(tower_http::trace::TraceLayer::new_for_http())

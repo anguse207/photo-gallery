@@ -3,7 +3,7 @@ use tracing::{error, info};
 
 use crate::state::AppState;
 
-pub const PATH_PREFIX: &str = "images/";
+pub const PATH_PREFIX: &str = "";
 
 pub async fn handle_files(State(state): State<AppState>, mut multipart: Multipart) {
     while let Some(file) = multipart.next_field().await.unwrap() {

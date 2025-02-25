@@ -1,45 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { url_ws } from "./consts";
 
-const ConnectWs = (url: string) => {
-  const [images, setImages] = useState<string[]>([]);
+import './Gallery.css'
+ 
 
+const ConnectWs = () => {
   useEffect(() => {
-    const ws = new WebSocket(url);
+    const ws = new WebSocket("ws://127.0.0.1:3000/api/ws");
 
     ws.onmessage = (event) => {
-      setImages((prev) => [...prev, event.data]); // Add new image to collection
+      // set the image source to the received data
+      const img = document.getElementById("gallery") as HTMLImageElement;
+
+      const blob = new Blob([event.data], { type: "image/" });
+      const url = URL.createObjectURL(blob);
+      img.src = url;
     };
-
-    return () => ws.close();
-  }, [url]);
-
-  return images;
+  }, []);
 };
 
 const Gallery = () => {
-  const images = ConnectWs(url_ws);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (images.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % images.length);
-      }, 30000); // Change image every 30s
-
-      return () => clearInterval(interval);
-    }
-  }, [images]);
+  ConnectWs();
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-900">
-      {images.length > 0 ? (
-        <img src={images[currentIndex]} alt="Gallery" className="max-w-full max-h-full rounded-lg shadow-lg" />
-      ) : (
-        <p className="text-white">Waiting for images...</p>
-      )}
-    </div>
+    <>
+      <h1>Gallery</h1>
+      <img id="gallery" />
+    </>
   );
 };
 

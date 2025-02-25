@@ -5,6 +5,7 @@ use std::{
     sync::{atomic::AtomicBool, Arc, Mutex},
 };
 use tokio::sync::broadcast;
+use tracing::debug;
 
 use crate::{runtime, upload::PATH_PREFIX};
 
@@ -39,6 +40,7 @@ impl AppState {
         let mut images = self.images.lock().unwrap();
 
         if images.is_empty() {
+            debug!("No images to send");
             return;
         }
 
@@ -50,7 +52,10 @@ impl AppState {
         std::fs::remove_file(&image_name).unwrap();
 
         // Send the image to the frontend, via the broadcast channel
-        self.tx.send(image).unwrap();
+        match self.tx.send(image) {
+            Ok(_) => debug!("Image sent to receivers"),
+            Err(_) => debug!("No receivers"),
+        }
     }
 
     pub fn is_started(&self) -> bool {
