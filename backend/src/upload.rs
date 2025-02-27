@@ -25,16 +25,17 @@ async fn handle_file(file: Field<'_>, state: AppState) {
         size = bytes.len()
     );
 
-    std::fs::write(format!("{PATH_PREFIX}{}", &name), bytes).unwrap();
-    state.add_image(&name);
+    let uuid_name = uuid::Uuid::new_v4().to_string();
+    std::fs::write(format!("{PATH_PREFIX}{}", &uuid_name), bytes).unwrap();
+    state.add_image(&uuid_name);
 
     if !state.is_started() {
         state.start().await;
     }
 }
 
-const SUPPORTED_IMAGE_FORMATS: [&str; 8] = [
-    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".avif",
+const SUPPORTED_IMAGE_FORMATS: [&str; 10] = [
+    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".avif", "ico", "gif",
 ];
 
 fn is_image(name: &str, content_type: &str) -> bool {
