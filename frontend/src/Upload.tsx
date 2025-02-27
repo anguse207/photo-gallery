@@ -4,6 +4,7 @@ import Button from '@mui/material/Button';
 
 import { url_upload } from './consts';
 
+import "./Upload.css";
 
 const Upload: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -41,8 +42,11 @@ const Upload: React.FC = () => {
   };
 
   return (
-    <div>
-      <Button variant='contained' onClick={handleButtonClick}>Upload File</Button>
+    <div id="upload">
+      <Button style={{maxWidth: '200px', maxHeight: '200px', minWidth: '200px', minHeight: '200px'}} variant='contained' onClick={handleButtonClick}>
+        Add<br/>
+        pictures
+      </Button>
       <input
         type="file"
         ref={fileInputRef}

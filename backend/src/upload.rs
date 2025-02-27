@@ -1,5 +1,5 @@
 use axum::extract::{multipart::Field, Multipart, State};
-use tracing::{error, info};
+use tracing::{debug, error};
 
 use crate::state::AppState;
 
@@ -20,7 +20,7 @@ async fn handle_file(file: Field<'_>, state: AppState) {
         return;
     }
 
-    info!(
+    debug!(
         "(`{name}`: `{content_type}`) is {size} bytes",
         size = bytes.len()
     );

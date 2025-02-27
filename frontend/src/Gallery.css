@@ -1,4 +1,15 @@
 #gallery {
-    max-height: 750px;
-    max-width: 1000px;
+    transition: transform 1s ease-out;
+    transform: translateY(0%);
+    opacity: 1;
+}
+
+#gallery.transition {
+    transform: translateY(100%);
+}
+
+#gallery.hide-above {
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform 0s ease-out;
 }

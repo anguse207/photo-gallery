@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import QRCode from "qrcode";
-import './QR.css'
 
+import "./QR.css";
 
 function generateQRCode() {
   const hostUrl = window.location.origin; // Gets the current host
