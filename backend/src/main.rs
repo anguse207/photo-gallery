@@ -1,5 +1,4 @@
 mod client_ws;
-mod frontend;
 mod runtime;
 mod server;
 mod state;

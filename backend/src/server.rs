@@ -1,23 +1,21 @@
 use axum::{
     extract::DefaultBodyLimit,
-    routing::{any, get},
+    routing::{any, post},
     Router,
 };
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
 use tower_http::limit::RequestBodyLimitLayer;
 
 use crate::client_ws::client_ws_handler;
 use crate::state::AppState;
-use crate::{frontend, upload};
+use crate::upload;
 
 pub async fn serve(state: AppState) {
     // build our application with some routes
     let app = Router::new()
-        .route(
-            "/api/upload",
-            get(frontend::upload_form).post(upload::handle_files),
-        )
+        .route("/api/upload",post(upload::handle_files))
         .route("/api/ws", any(client_ws_handler))
+        .fallback_service(ServeDir::new(""))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(10 * 1024 * 1024 /* 10mb */))
         .layer(tower_http::trace::TraceLayer::new_for_http())
