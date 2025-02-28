@@ -1,5 +1,5 @@
 export const url_upload = window.location.origin + "/api/upload";
-export const url_ws = "ws://" + window.location.hostname + "/api/ws";
+export const url_ws = window.location.origin + "/api/ws";
 
 console.log("url_upload: ", url_upload);
 console.log("url_ws: ", url_ws);
