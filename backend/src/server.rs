@@ -15,7 +15,7 @@ pub async fn serve(state: AppState) {
     let app = Router::new()
         .route("/api/upload",post(upload::handle_files))
         .route("/api/ws", any(client_ws_handler))
-        .fallback_service(ServeDir::new(""))
+        .fallback_service(ServeDir::new(std::env::var("FRONTEND_DIR").unwrap()))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(10 * 1024 * 1024 /* 10mb */))
         .layer(tower_http::trace::TraceLayer::new_for_http())
@@ -27,8 +27,8 @@ pub async fn serve(state: AppState) {
         )
         .with_state(state);
 
-    // run it with hyper
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let address = format!("0.0.0.0:{}", std::env::var("BACKEND_PORT").unwrap());
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     tracing::debug!("listening on {}", &listener.local_addr().unwrap());
 
     tokio::spawn(async move {

@@ -17,7 +17,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let state = state::AppState::new();
+    let state: state::AppState = state::AppState::new();
 
     server::serve(state.clone()).await;
 }

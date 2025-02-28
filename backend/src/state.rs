@@ -33,7 +33,7 @@ impl AppState {
     pub async fn start(&self) {
         self.started
             .store(true, std::sync::atomic::Ordering::Relaxed);
-        runtime::start(self.clone()).await;
+        runtime::start(self.clone(), std::env::var("IMAGE_DURATION").unwrap().parse().unwrap()).await;
     }
 
     pub fn try_next_image(&self) {
