@@ -31,7 +31,6 @@ const Upload: React.FC = () => {
           }
         );
 
-        // console.log(response);
         if (!response.ok) throw new Error("Upload failed");
       } catch (error) {
         console.error(`Error uploading file "${file.name}":`, error);

@@ -6,7 +6,7 @@ import { url_ws } from "./consts";
 
 const useWebSocket = (url: string) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const reconnectRef = useRef(0); // Track reconnection attempts
+  const reconnectRef = useRef(0);
 
   useEffect(() => {
     const connect = () => {
@@ -14,7 +14,7 @@ const useWebSocket = (url: string) => {
 
       socket.onopen = () => {
         console.log("Connected to WebSocket");
-        reconnectRef.current = 0; // Reset retries on successful connection
+        reconnectRef.current = 0;
       };
 
       socket.onmessage = async (event) => {
