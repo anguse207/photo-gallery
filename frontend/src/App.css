@@ -3,7 +3,21 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #a4eda1;
+  background: linear-gradient(130deg, #ff7e00, #43e0b6, #ff6cb6);
+  background-size: 200% 200%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 #app-container {
@@ -26,6 +40,7 @@ html, body {
   background-position: center;
   overflow: hidden;
 }
+
 
 #upload {
   position: absolute;
