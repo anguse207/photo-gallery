@@ -19,7 +19,7 @@ const ConnectWs = () => {
 
       // Hide current image
       gallery.classList.add("transition");
-      await timeout(999);
+      await timeout(1000);
       gallery.classList.remove("transition");
 
       // Set new image
@@ -27,8 +27,12 @@ const ConnectWs = () => {
 
       // Add transition effect
       gallery.classList.add("hide-above");
-      await timeout(1);
+      await timeout(10);
       gallery.classList.remove("hide-above");
+    };
+
+    ws.onclose = () => {
+      ConnectWs();
     };
   }, []);
 };

@@ -34,8 +34,8 @@ async fn handle_file(file: Field<'_>, state: AppState) {
     }
 }
 
-const SUPPORTED_IMAGE_FORMATS: [&str; 10] = [
-    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".avif", "ico", "gif",
+const SUPPORTED_IMAGE_FORMATS: [&str; 11] = [
+    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".avif", "ico", "gif", "heic",
 ];
 
 fn is_image(name: &str, content_type: &str) -> bool {
