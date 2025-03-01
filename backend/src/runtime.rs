@@ -3,7 +3,6 @@ use tracing::info;
 use crate::state::AppState;
 
 pub async fn start(state: AppState, interval: u64) {
-
     tokio::spawn(async move {
         info!("Starting runtime...");
 

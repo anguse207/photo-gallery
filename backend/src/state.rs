@@ -33,7 +33,11 @@ impl AppState {
     pub async fn start(&self) {
         self.started
             .store(true, std::sync::atomic::Ordering::Relaxed);
-        runtime::start(self.clone(), std::env::var("IMAGE_DURATION").unwrap().parse().unwrap()).await;
+        runtime::start(
+            self.clone(),
+            std::env::var("IMAGE_DURATION").unwrap().parse().unwrap(),
+        )
+        .await;
     }
 
     pub fn try_next_image(&self) {
@@ -49,7 +53,9 @@ impl AppState {
         let image = self.get_image_bytes(&image_name);
 
         // Remove the image from the filesystem
-        std::fs::remove_file(&image_name).unwrap();
+        let path = format!("{}{}", *PATH_PREFIX, &image_name);
+        debug!("Removing image {:?}", &path);
+        std::fs::remove_file(&path).unwrap();
 
         // Send the image to the frontend, via the broadcast channel
         match self.tx.send(image) {
@@ -67,6 +73,6 @@ impl AppState {
     }
 
     fn get_image_bytes(&self, image_name: &ImagePath) -> Image {
-        std::fs::read(format!("{PATH_PREFIX}{}", &image_name)).unwrap()
+        std::fs::read(format!("{}{}", *PATH_PREFIX, &image_name)).unwrap()
     }
 }

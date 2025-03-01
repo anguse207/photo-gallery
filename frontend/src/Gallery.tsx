@@ -1,50 +1,63 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
+
+import "./Gallery.css";
 
 import { url_ws } from "./consts";
 
-import './Gallery.css'
+const useWebSocket = (url: string) => {
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const reconnectRef = useRef(0); // Track reconnection attempts
 
-function timeout(delay: number) {
-  return new Promise( res => setTimeout(res, delay) );
-}
-
-const ConnectWs = () => {
   useEffect(() => {
-    const ws = new WebSocket(url_ws);
+    const connect = () => {
+      const socket = new WebSocket(url);
 
-    ws.onmessage = async (event) => {
-      const gallery = document.getElementById("gallery") as HTMLImageElement;
-      const blob = new Blob([event.data], { type: "image/" });
-      const url = URL.createObjectURL(blob);
+      socket.onopen = () => {
+        console.log("Connected to WebSocket");
+        reconnectRef.current = 0; // Reset retries on successful connection
+      };
 
-      // Hide current image
-      gallery.classList.add("transition");
-      await timeout(1000);
-      gallery.classList.remove("transition");
+      socket.onmessage = async (event) => {
+        const gallery = document.getElementById("gallery") as HTMLDivElement;
+        const blob = new Blob([event.data], { type: "image/png" });
+        const url = URL.createObjectURL(blob);
 
-      // Set new image
-      gallery.style.backgroundImage = `url(${url})`;
+        gallery.classList.add("transition");
+        await new Promise((res) => setTimeout(res, 1000));
+        gallery.classList.remove("transition");
 
-      // Add transition effect
-      gallery.classList.add("hide-above");
-      await timeout(10);
-      gallery.classList.remove("hide-above");
+        gallery.style.backgroundImage = `url(${url})`;
+
+        gallery.classList.add("hide-above");
+        await new Promise((res) => setTimeout(res, 10));
+        gallery.classList.remove("hide-above");
+      };
+
+      socket.onclose = () => {
+        console.log("WebSocket closed. Reconnecting...");
+        reconnectRef.current += 1;
+        setTimeout(connect, Math.min(1000 * 2 ** reconnectRef.current, 30000)); // Exponential backoff
+      };
+
+      socket.onerror = (err) => {
+        console.error("WebSocket error:", err);
+        socket.close();
+      };
+
+      setWs(socket);
     };
 
-    ws.onclose = () => {
-      ConnectWs();
-    };
-  }, []);
+    connect();
+    return () => ws?.close();
+  }, [url]);
+
+  return ws;
 };
 
 const Gallery = () => {
-  ConnectWs();
+  useWebSocket(url_ws);
 
-  return (
-    <>
-      <div id="gallery" />
-    </>
-  );
+  return <div id="gallery" />;
 };
 
 export default Gallery;

@@ -3,8 +3,11 @@ use axum::{
     routing::{any, post},
     Router,
 };
-use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
 use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::{
+    cors::{Any, CorsLayer},
+    services::ServeDir,
+};
 
 use crate::client_ws::client_ws_handler;
 use crate::state::AppState;
@@ -13,7 +16,7 @@ use crate::upload;
 pub async fn serve(state: AppState) {
     // build our application with some routes
     let app = Router::new()
-        .route("/api/upload",post(upload::handle_files))
+        .route("/api/upload", post(upload::handle_files))
         .route("/api/ws", any(client_ws_handler))
         .fallback_service(ServeDir::new(std::env::var("FRONTEND_DIR").unwrap()))
         .layer(DefaultBodyLimit::disable())

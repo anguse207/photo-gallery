@@ -1,9 +1,12 @@
+use std::sync::LazyLock;
+
 use axum::extract::{multipart::Field, Multipart, State};
 use tracing::{debug, error};
 
 use crate::state::AppState;
 
-pub const PATH_PREFIX: &str = "";
+pub static PATH_PREFIX: LazyLock<String> =
+    std::sync::LazyLock::new(|| std::env::var("IMAGE_DIR").unwrap().as_str().to_owned());
 
 pub async fn handle_files(State(state): State<AppState>, mut multipart: Multipart) {
     while let Some(file) = multipart.next_field().await.unwrap() {
@@ -26,7 +29,9 @@ async fn handle_file(file: Field<'_>, state: AppState) {
     );
 
     let uuid_name = uuid::Uuid::new_v4().to_string();
-    std::fs::write(format!("{PATH_PREFIX}{}", &uuid_name), bytes).unwrap();
+    let path = format!("{}{}", *PATH_PREFIX, &uuid_name);
+    debug!("Saving image to {:?}", &path);
+    std::fs::write(&path, bytes).unwrap();
     state.add_image(&uuid_name);
 
     if !state.is_started() {
